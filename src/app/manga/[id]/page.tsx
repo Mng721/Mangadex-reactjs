@@ -1,18 +1,56 @@
 "use client"
 import axios from 'axios'
-import { useParams } from 'next/navigation'
+
+import { Check, ChevronDown, ChevronRight, ChevronsUpDown } from "lucide-react"
+import { useParams, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
-import { Manga } from '~/types/manga'
+import { Manga, Volume } from '~/types/manga'
+
+import { Button } from "~/components/ui/button"
+import {
+    Command,
+    CommandGroup,
+    CommandItem,
+    CommandList,
+} from "~/components/ui/command"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "~/components/ui/popover"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "~/components/ui/collapsible"
+import { cn } from '~/lib/utils'
+
+const languages = [
+    {
+        value: "en",
+        label: "English"
+    },
+    {
+        value: "vi",
+        label: "Vietnamese"
+    },
+    {
+        value: "ja",
+        label: "Japanese"
+    }
+]
 
 const MangaPage = () => {
     const params = useParams<{ id: string; }>()
+    const router = useRouter()
 
     const [mangaData, setMangaData] = useState<Manga>()
-    const [volumeChaptersData, setVolumeChaptersData] = useState([])
-    const [currentValue, setCurrentValue] = useState<string>('en');
+    const [volumeChaptersData, setVolumeChaptersData] = useState<Volume[]>([])
+    const [languageOpen, setLanguageOpen] = useState(false)
+    const [value, setValue] = useState<string>('en');
+    const [volumeOpen, setVolumeOpen] = useState<{ [id: string]: boolean }>({})
 
-    const fetchVolumesChaptersData = (languageSelected: string) => {
-
+    const fetchVolumeChaptersData = (languageSelected: string) => {
         axios.get(`https://api.mangadex.org/manga/${params.id}/aggregate?translatedLanguage%5B%5D=${languageSelected}`)
             .then((res) => {
                 setVolumeChaptersData(Object.values(res.data.volumes))
@@ -26,17 +64,124 @@ const MangaPage = () => {
 
     useEffect(() => {
         fetchMangaData()
-        fetchVolumesChaptersData(currentValue)
+        fetchVolumeChaptersData(value)
     }, [])
 
+    useEffect(() => {
+        fetchVolumeChaptersData(value)
+    }, [value])
+
+    console.log(volumeOpen)
     return (
-        <div className='text-black flex flex-col items-center'>
-            <img
-                src={`https://uploads.mangadex.org/covers/${params.id}/${(mangaData?.relationships.find(rel => rel.type === "cover_art")?.attributes?.fileName)}`}
-                alt="manga-cover"
-                className='w-full h-auto'
-            />
-            <div className='text-4xl text-black'>{mangaData?.attributes.title.en ?? mangaData?.attributes.title.ja}</div>
+        <div className='text-black flex flex-col items-center bg-black min-h-screen'>
+            <div className=' w-full h-[70vh] relative'>
+                <img
+                    src={`https://uploads.mangadex.org/covers/${params.id}/${(mangaData?.relationships.find(rel => rel.type === "cover_art")?.attributes?.fileName)}`}
+                    alt="manga-cover"
+                    className='object-cover h-full w-full absolute'
+                />
+
+                <div className='absolute bg-gradient-to-b from-transparent to-black inset-0'></div>
+                <div className='w-full h-full bg-transparent relative z-10'>
+                    <div className='absolute bottom-0 left-0'>
+                        <div className='text-4xl text-white'>{mangaData?.attributes.title.en ?? mangaData?.attributes.title.ja}</div>
+                        {mangaData?.relationships.find(rel => rel.type === "author")?.attributes?.name &&
+                            <div className='text-gray-300 text-2xl cursor-pointer italic'>{mangaData?.relationships.find(rel => rel.type === "author")?.attributes?.name}</div>}
+                        <div className='text-gray-300 line-clamp-1'>{mangaData?.attributes.tags.map((tag, index) => {
+                            if (index === mangaData.attributes.tags.length - 1) {
+                                return tag.attributes.name.en
+                            }
+                            return `${tag.attributes.name.en}, `
+                        })}</div>
+                    </div>
+                </div>
+            </div>
+            <div className='w-full flex flex-row items-center p-4'>
+                <div className='text-white mr-4'>Choose language: </div>
+                <Popover open={languageOpen} onOpenChange={setLanguageOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-[200px] justify-between bg-black text-white"
+                        >
+                            {value
+                                ? languages.find((language) => language.value === value)?.label
+                                : "Select language..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0">
+                        <Command className='bg-black text-white'>
+                            <CommandList>
+                                <CommandGroup>
+                                    {languages.map((language) => (
+                                        <CommandItem
+                                            key={language.value}
+                                            value={language.value}
+                                            onSelect={(currentValue) => {
+                                                setValue(currentValue === value ? "" : currentValue)
+                                                setLanguageOpen(false)
+                                            }}
+                                            className='bg-black text-white'
+                                        >
+                                            <Check
+                                                className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    'bg-black text-white',
+                                                    value === language.value ? "opacity-100" : "opacity-0"
+                                                )}
+                                            />
+                                            {language.label}
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
+            </div>
+            {volumeChaptersData && <div className='w-full'>
+                {volumeChaptersData.map(vol =>
+                    <div
+                        key={vol.volume}
+                        className='text-white'>
+                        <Collapsible open={volumeOpen[vol.volume]} onOpenChange={() => (setVolumeOpen({ ...volumeOpen, [vol.volume]: !volumeOpen[vol.volume] }))}>
+                            <CollapsibleTrigger
+                                className={
+                                    cn(
+                                        'flex flex-row justify-between items-center w-full',
+                                        'md:px-10')}>
+                                <div className='text-3xl font-semibold'>
+                                    {
+                                        vol.volume === "none"
+                                            ? "None"
+                                            : `Volume ${vol.volume}`
+                                    }
+                                </div>
+                                {volumeOpen[vol.volume] ? <ChevronDown /> : <ChevronRight />
+                                }
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                {
+                                    Object.values(vol.chapters).map((chapter) => <div
+                                        className={
+                                            cn(
+                                                'p-3 text-xl w-full',
+                                                'hover:bg-gray-900',
+                                                'md:px-12'
+                                            )}
+                                        onClick={() => router.push(`./chapter/${chapter.id}`)}>
+                                        {`Chapter ${chapter.chapter}`}
+                                    </div>
+                                    )
+                                }
+                            </CollapsibleContent>
+                        </Collapsible>
+
+                    </div>
+                )}
+            </div>}
         </div>
     )
 }

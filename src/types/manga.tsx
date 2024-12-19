@@ -6,6 +6,7 @@ export type Manga = {
             en?: string
             ja?: string
         }
+        tags: Tag[]
     }
     relationships: {
         id: string
@@ -29,4 +30,11 @@ export type Chapter = {
     id: string
     others: any
     count: number
+}
+
+export type Tag = {
+    id: string
+    type: string
+    attributes: any
+    relationships: any
 }
