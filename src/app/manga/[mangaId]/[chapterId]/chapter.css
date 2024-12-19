@@ -1,0 +1,8 @@
+nav {
+  font-family: sans-serif;
+  transition: transform 150ms ease-in-out;
+}
+
+nav.nav-bar--hidden {
+  transform: translateY(-100%);
+}

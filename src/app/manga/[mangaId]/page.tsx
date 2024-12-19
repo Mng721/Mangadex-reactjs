@@ -24,6 +24,7 @@ import {
     CollapsibleTrigger,
 } from "~/components/ui/collapsible"
 import { cn } from '~/lib/utils'
+import { BASE_URL } from '~/util/constant'
 
 const languages = [
     {
@@ -41,7 +42,7 @@ const languages = [
 ]
 
 const MangaPage = () => {
-    const params = useParams<{ id: string; }>()
+    const params = useParams()
     const router = useRouter()
 
     const [mangaData, setMangaData] = useState<Manga>()
@@ -51,14 +52,14 @@ const MangaPage = () => {
     const [volumeOpen, setVolumeOpen] = useState<{ [id: string]: boolean }>({})
 
     const fetchVolumeChaptersData = (languageSelected: string) => {
-        axios.get(`https://api.mangadex.org/manga/${params.id}/aggregate?translatedLanguage%5B%5D=${languageSelected}`)
+        axios.get(`${BASE_URL}/manga/${params.mangaId}/aggregate?translatedLanguage%5B%5D=${languageSelected}`)
             .then((res) => {
                 setVolumeChaptersData(Object.values(res.data.volumes))
             })
     }
 
     const fetchMangaData = () => {
-        axios.get(`https://api.mangadex.org/manga/${params.id}?includes%5B%5D=manga&includes%5B%5D=cover_art&includes%5B%5D=author`)
+        axios.get(`${BASE_URL}/manga/${params.mangaId}?includes%5B%5D=manga&includes%5B%5D=cover_art&includes%5B%5D=author`)
             .then((res) => setMangaData(res.data.data))
     }
 
@@ -76,7 +77,7 @@ const MangaPage = () => {
         <div className='text-black flex flex-col items-center bg-black min-h-screen'>
             <div className=' w-full h-[70vh] relative'>
                 <img
-                    src={`https://uploads.mangadex.org/covers/${params.id}/${(mangaData?.relationships.find(rel => rel.type === "cover_art")?.attributes?.fileName)}`}
+                    src={`https://uploads.mangadex.org/covers/${params.mangaId}/${(mangaData?.relationships.find(rel => rel.type === "cover_art")?.attributes?.fileName)}`}
                     alt="manga-cover"
                     className='object-cover h-full w-full absolute'
                 />
@@ -167,11 +168,11 @@ const MangaPage = () => {
                                     Object.values(vol.chapters).map((chapter) => <div
                                         className={
                                             cn(
-                                                'p-3 text-xl w-full',
+                                                'p-3 text-xl w-full cursor-pointer',
                                                 'hover:bg-gray-900',
                                                 'md:px-12'
                                             )}
-                                        onClick={() => router.push(`./chapter/${chapter.id}`)}>
+                                        onClick={() => router.push(`./${mangaData?.id}/${chapter.id}`)}>
                                         {`Chapter ${chapter.chapter}`}
                                     </div>
                                     )
