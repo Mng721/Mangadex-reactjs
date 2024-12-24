@@ -58,9 +58,25 @@ const MangaPage = () => {
             })
     }
 
-    const fetchMangaData = () => {
-        axios.get(`${BASE_URL}/manga/${params.mangaId}?includes%5B%5D=manga&includes%5B%5D=cover_art&includes%5B%5D=author`)
+    const fetchMangaData = async () => {
+        await axios.get(`${BASE_URL}/manga/${params.mangaId}?includes%5B%5D=manga&includes%5B%5D=cover_art&includes%5B%5D=author`)
             .then((res) => setMangaData(res.data.data))
+    }
+
+    const getLastestChapter = async () => {
+        await axios({
+            method: 'GET',
+            url: `${BASE_URL}/manga/${params.mangaId}/feed?translatedLanguage[]=${value}&order[chapter]=desc&limit=1`
+        }).then(res => router.push(`./${mangaData?.id}/${res.data.data[0].id}`));
+
+    }
+
+    const getFirstChapter = async () => {
+        await axios({
+            method: 'GET',
+            url: `${BASE_URL}/manga/${params.mangaId}/feed?translatedLanguage[]=${value}&order[chapter]=asc&limit=1`
+        }).then(res => router.push(`./${mangaData?.id}/${res.data.data[0].id}`));
+
     }
 
     useEffect(() => {
@@ -72,7 +88,6 @@ const MangaPage = () => {
         fetchVolumeChaptersData(value)
     }, [value])
 
-    console.log(volumeOpen)
     return (
         <div className='text-black flex flex-col items-center bg-black min-h-screen'>
             <div className=' w-full h-[70vh] relative'>
@@ -85,7 +100,7 @@ const MangaPage = () => {
                 <div className='absolute bg-gradient-to-b from-transparent to-black inset-0'></div>
                 <div className='w-full h-full bg-transparent relative z-10'>
                     <div className='absolute bottom-0 left-0'>
-                        <div className='text-4xl text-white'>{mangaData?.attributes.title.en ?? mangaData?.attributes.title.ja}</div>
+                        <div className='text-4xl text-white'>{mangaData?.attributes.title?.en ?? mangaData?.attributes.title?.ja}</div>
                         {mangaData?.relationships.find(rel => rel.type === "author")?.attributes?.name &&
                             <div className='text-gray-300 text-2xl cursor-pointer italic'>{mangaData?.relationships.find(rel => rel.type === "author")?.attributes?.name}</div>}
                         <div className='text-gray-300 line-clamp-1'>{mangaData?.attributes.tags.map((tag, index) => {
@@ -95,6 +110,29 @@ const MangaPage = () => {
                             return `${tag.attributes.name.en}, `
                         })}</div>
                     </div>
+                </div>
+            </div>
+            <div className='flex flex-row items-center gap-2'>
+                <div className={
+                    cn(
+                        "rounded-lg bg-gray-700 text-white p-3 text-2xl",
+                        "hover:bg-gray-500 hover:cursor-pointer",
+                        volumeChaptersData.length === 0 ? "bg-gray-900 text-gray-500 pointer-events-none" : ""
+                    )
+                }
+                    onClick={getFirstChapter}
+                >
+                    Read first
+                </div>
+                <div className={
+                    cn(
+                        "rounded-lg bg-gray-700 text-white p-3 text-2xl",
+                        "hover:bg-gray-500 hover:cursor-pointer",
+                        volumeChaptersData.length === 0 ? "bg-gray-900 text-gray-500 pointer-events-none" : ""
+                    )
+                }
+                    onClick={getLastestChapter}>
+                    Read last
                 </div>
             </div>
             <div className='w-full flex flex-row items-center p-4'>
@@ -165,7 +203,8 @@ const MangaPage = () => {
                             </CollapsibleTrigger>
                             <CollapsibleContent>
                                 {
-                                    Object.values(vol.chapters).map((chapter) => <div
+                                    Object.values(vol.chapters).map((chapter, index) => <div
+                                        key={`chapter-${index + 1}`}
                                         className={
                                             cn(
                                                 'p-3 text-xl w-full cursor-pointer',

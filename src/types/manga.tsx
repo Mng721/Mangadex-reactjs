@@ -19,13 +19,27 @@ export type Manga = {
     }[]
 }
 
+export type Chapter = {
+    id: string
+    type: "chapter"
+    attributes: ChapterAttributes
+    relationship: Relationship
+}
+
+export type ChapterAttributes = {
+    title: string
+    volume: string
+    chapter: string
+    pages: number
+    translatedLanguage: string
+}
 export type Volume = {
     volume: string
     count: number
-    chapters: Chapter
+    chapters: VolumeChapter
 
 }
-export type Chapter = {
+export type VolumeChapter = {
     chapter: string
     id: string
     others: any
@@ -37,4 +51,11 @@ export type Tag = {
     type: string
     attributes: any
     relationships: any
+}
+
+export type Relationship = {
+    id: string
+    type: string
+    relate: string
+    attributes: any
 }
