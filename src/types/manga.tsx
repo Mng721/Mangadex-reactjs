@@ -23,7 +23,7 @@ export type Chapter = {
     id: string
     type: "chapter"
     attributes: ChapterAttributes
-    relationship: Relationship
+    relationships: Relationship[]
 }
 
 export type ChapterAttributes = {

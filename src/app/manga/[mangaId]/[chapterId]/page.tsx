@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import "./chapter.css"
 import useScrollListener from '~/hooks/useScrollListener'
-import { Chapter as ChapterType } from '~/types/manga'
+import { Chapter as ChapterType, Relationship } from '~/types/manga'
 import { BASE_URL } from '~/util/constant'
 import { cn } from '~/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
@@ -19,6 +19,7 @@ const Chapter = () => {
     const [error, setError] = useState(false)
     const [allChapter, setAllChapter] = useState([])
     const [navClassList, setNavClassList] = useState([""]);
+    const [chapterIndex, setChapterIndex] = useState(0)
     const scroll = useScrollListener();
 
     // update classList of nav on scroll
@@ -37,15 +38,20 @@ const Chapter = () => {
             url: `${BASE_URL}/chapter/${params.chapterId}`
         }).then(res => {
             setChapterData(res.data.data)
-            getMangaChapter(res.data.data.attributes.translatedLanguage)
+            getMangaChapter(res.data.data.attributes.translatedLanguage, res.data.data)
         });
     }
 
-    const getMangaChapter = async (language: string) => {
+    const getMangaChapter = async (language: string, chapterData: ChapterType) => {
         await axios({
             method: 'GET',
-            url: `${BASE_URL}/manga/${params.mangaId}/feed?limit=100&translatedLanguage%5B%5D=${language}&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5BcreatedAt%5D=asc&order%5BupdatedAt%5D=asc&order%5BpublishAt%5D=asc&order%5BreadableAt%5D=asc&order%5Bvolume%5D=asc&order%5Bchapter%5D=asc`
-        }).then(res =>
+            url: `${BASE_URL}/manga/${params.mangaId}/feed?limit=100&translatedLanguage%5B%5D=${language}&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5Bchapter%5D=asc`,
+        }).then(res => {
+            setChapterIndex(
+                res.data.data
+                    .findIndex(
+                        (item: any) => item.id === chapterData.id
+                    ))
             setAllChapter(res.data.data.map((item: any) => {
                 return {
                     chapter: item.attributes.chapter,
@@ -53,11 +59,29 @@ const Chapter = () => {
                     id: item.id
                 }
             }))
-        ).catch(() => {
+        }
+        ).catch((error) => {
+            console.log(error)
             setError(true)
         });
     }
 
+    const goToNextChapter = () => {
+        if (allChapter[chapterIndex + 1] && allChapter) {
+            router.replace(`/manga/${params.mangaId}/${allChapter[chapterIndex + 1].id}`)
+            return
+        }
+        router.back()
+    }
+
+
+    const goToPreviousChapter = () => {
+        if (allChapter[chapterIndex - 1] && allChapter) {
+            router.replace(`/manga/${params.mangaId}/${allChapter[chapterIndex - 1].id}`)
+            return
+        }
+        router.back()
+    }
     const fetchChapterImgUrl = async () => {
         const url = await axios.get(`https://api.mangadex.org/at-home/server/${params.chapterId}?forcePort443=false`)
             .then((res) =>
@@ -79,9 +103,10 @@ const Chapter = () => {
     return (
         <div className='min-h-sceen w-full bg-teal-300'>
             <nav className={`bg-[#333] fixed h-auto top-0 w-full flex flex-row gap-4 ${navClassList.join(" ")}`}>
-                <a className='float-left no-underline text-white p-4 cursor-pointer hover:bg-[#ddd] hover:text-black text-center basis-1/3'>Previous chapter</a>
+                <a
+                    onClick={goToPreviousChapter}
+                    className='float-left no-underline text-white p-4 cursor-pointer hover:bg-[#ddd] hover:text-black text-center basis-1/3'>Previous chapter</a>
                 <div className='basis-1/3 flex flex-col flex-1 mx-4 justify-center items-center'>
-
                     <Popover >
                         <PopoverTrigger asChild>
                             <Button
@@ -102,7 +127,7 @@ const Chapter = () => {
                             <Command className='bg-black text-white'>
                                 <CommandList>
                                     <CommandGroup>
-                                        {allChapter.sort((a: any, b: any) => +a.chapter - +b.chapter).map((chapter: any) => (
+                                        {allChapter.map((chapter: any) => (
                                             <CommandItem
                                                 key={chapter.chapter}
                                                 value={chapter.chapter}
@@ -121,6 +146,7 @@ const Chapter = () => {
                     </Popover>
                 </div>
                 <a
+                    onClick={goToNextChapter}
                     className='float-left no-underline text-white p-4 cursor-pointer hover:bg-[#ddd] hover:text-black text-center basis-1/3'>Next chapter</a>
             </nav>
 
