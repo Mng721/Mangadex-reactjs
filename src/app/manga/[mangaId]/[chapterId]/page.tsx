@@ -23,6 +23,7 @@ const Chapter = () => {
     const [chapterIndex, setChapterIndex] = useState(0)
     const scroll = useScrollListener();
     const [currentOffset, setCurrentOffset] = useState(0);
+    const [language, setLanguage] = useState<string>("")
 
     const LIMIT = 100
     // update classList of nav on scroll
@@ -41,6 +42,7 @@ const Chapter = () => {
             url: `${BASE_URL}/chapter/${params.chapterId}`
         }).then(res => {
             setChapterData(res.data.data)
+            setLanguage(res.data.data.attributes.translatedLanguage)
             getMangaChapter(res.data.data.attributes.translatedLanguage, res.data.data)
         });
     }
@@ -48,7 +50,7 @@ const Chapter = () => {
     const getMangaChapter = async (language: string, chapterData: ChapterType) => {
         await axios({
             method: 'GET',
-            url: `${BASE_URL}/manga/${params.mangaId}/feed?limit=${LIMIT}&translatedLanguage%5B%5D=${language}&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5Bchapter%5D=asc`,
+            url: `${BASE_URL}/manga/${params.mangaId}/feed?limit=${LIMIT}&translatedLanguage%5B%5D=${language}&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5Bchapter%5D=asc&offset=${currentOffset}`,
         }).then(res => {
             setChapterIndex(
                 res.data.data
@@ -69,6 +71,7 @@ const Chapter = () => {
             setAllChapter([...newAllChapterData, ...allChapter])
         }
         ).catch((error) => {
+            console.log(error)
             setError(true)
         });
     }
@@ -105,6 +108,10 @@ const Chapter = () => {
         getChapterData()
     }, [])
 
+    useEffect(() => {
+        if (chapterData)
+            getMangaChapter(language, chapterData)
+    }, [currentOffset])
     return (
         <div className='min-h-sceen w-full bg-teal-300'>
             <nav className={`bg-[#333] fixed h-auto top-0 w-full flex flex-row gap-4 ${navClassList.join(" ")}`}>
