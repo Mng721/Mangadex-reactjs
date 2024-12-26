@@ -11,17 +11,20 @@ import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover
 import { Button } from '~/components/ui/button'
 import { ChevronsUpDown } from 'lucide-react'
 import { Command, CommandGroup, CommandItem, CommandList } from '~/components/ui/command'
+import { set } from 'zod'
 const Chapter = () => {
     const params = useParams<{ mangaId: string; chapterId: string }>()
     const router = useRouter()
     const [chapterImgUrl, setChapterImgUrl] = useState<string[]>([])
     const [chapterData, setChapterData] = useState<ChapterType>()
     const [error, setError] = useState(false)
-    const [allChapter, setAllChapter] = useState([])
+    const [allChapter, setAllChapter] = useState<any[]>([])
     const [navClassList, setNavClassList] = useState([""]);
     const [chapterIndex, setChapterIndex] = useState(0)
     const scroll = useScrollListener();
+    const [currentOffset, setCurrentOffset] = useState(0);
 
+    const LIMIT = 100
     // update classList of nav on scroll
     useEffect(() => {
         const _classList = [];
@@ -45,23 +48,27 @@ const Chapter = () => {
     const getMangaChapter = async (language: string, chapterData: ChapterType) => {
         await axios({
             method: 'GET',
-            url: `${BASE_URL}/manga/${params.mangaId}/feed?limit=100&translatedLanguage%5B%5D=${language}&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5Bchapter%5D=asc`,
+            url: `${BASE_URL}/manga/${params.mangaId}/feed?limit=${LIMIT}&translatedLanguage%5B%5D=${language}&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5Bchapter%5D=asc`,
         }).then(res => {
             setChapterIndex(
                 res.data.data
                     .findIndex(
                         (item: any) => item.id === chapterData.id
                     ))
-            setAllChapter(res.data.data.map((item: any) => {
+            if (res.data.data.length === 100 && res.data.offset < res.data.total) {
+                setCurrentOffset(res.data.offset + LIMIT)
+            }
+
+            const newAllChapterData = res.data.data.map((item: any) => {
                 return {
                     chapter: item.attributes.chapter,
                     title: item.attributes.title ?? null,
                     id: item.id
                 }
-            }))
+            })
+            setAllChapter([...newAllChapterData, ...allChapter])
         }
         ).catch((error) => {
-            console.log(error)
             setError(true)
         });
     }
@@ -73,7 +80,6 @@ const Chapter = () => {
         }
         router.back()
     }
-
 
     const goToPreviousChapter = () => {
         if (allChapter[chapterIndex - 1] && allChapter) {
@@ -98,7 +104,6 @@ const Chapter = () => {
         fetchChapterImgUrl()
         getChapterData()
     }, [])
-
 
     return (
         <div className='min-h-sceen w-full bg-teal-300'>
