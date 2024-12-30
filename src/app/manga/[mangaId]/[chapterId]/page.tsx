@@ -11,7 +11,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover
 import { Button } from '~/components/ui/button'
 import { ChevronsUpDown } from 'lucide-react'
 import { Command, CommandGroup, CommandItem, CommandList } from '~/components/ui/command'
-import { set } from 'zod'
 const Chapter = () => {
     const params = useParams<{ mangaId: string; chapterId: string }>()
     const router = useRouter()
@@ -22,8 +21,6 @@ const Chapter = () => {
     const [navClassList, setNavClassList] = useState([""]);
     const [chapterIndex, setChapterIndex] = useState(0)
     const scroll = useScrollListener();
-    const [currentOffset, setCurrentOffset] = useState(0);
-    const [language, setLanguage] = useState<string>("")
 
     const LIMIT = 100
     // update classList of nav on scroll
@@ -42,33 +39,31 @@ const Chapter = () => {
             url: `${BASE_URL}/chapter/${params.chapterId}`
         }).then(res => {
             setChapterData(res.data.data)
-            setLanguage(res.data.data.attributes.translatedLanguage)
-            getMangaChapter(res.data.data.attributes.translatedLanguage, res.data.data)
+            getMangaChapter(res.data.data.attributes.translatedLanguage, res.data.data, 0)
         });
     }
 
-    const getMangaChapter = async (language: string, chapterData: ChapterType) => {
+    const getMangaChapter = async (language: string, chapterData: ChapterType, offset: number) => {
         await axios({
             method: 'GET',
-            url: `${BASE_URL}/manga/${params.mangaId}/feed?limit=${LIMIT}&translatedLanguage%5B%5D=${language}&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5Bchapter%5D=asc&offset=${currentOffset}`,
+            url: `${BASE_URL}/manga/${params.mangaId}/feed?limit=${LIMIT}&translatedLanguage%5B%5D=${language}&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5Bchapter%5D=asc&offset=${offset}`,
         }).then(res => {
-            setChapterIndex(
-                res.data.data
-                    .findIndex(
-                        (item: any) => item.id === chapterData.id
-                    ))
+            const newAllChapterData = res.data.data
+                .map((item: any) => {
+                    return {
+                        chapter: item.attributes.chapter,
+                        title: item.attributes.title ?? null,
+                        id: item.id
+                    }
+                })
+            allChapter.push(...newAllChapterData)
+
             if (res.data.data.length === 100 && res.data.offset < res.data.total) {
-                setCurrentOffset(res.data.offset + LIMIT)
+                getMangaChapter(language, chapterData, res.data.offset + LIMIT)
+                return
             }
 
-            const newAllChapterData = res.data.data.map((item: any) => {
-                return {
-                    chapter: item.attributes.chapter,
-                    title: item.attributes.title ?? null,
-                    id: item.id
-                }
-            })
-            setAllChapter([...newAllChapterData, ...allChapter])
+            setAllChapter(uniqByKeepLast(allChapter, "chapter"))
         }
         ).catch((error) => {
             console.log(error)
@@ -76,6 +71,15 @@ const Chapter = () => {
         });
     }
 
+    const uniqByKeepLast = (data: any[], key: string) => {
+        return [
+            ...new Map(
+                data.map((x) => [x[key], x])
+            ).values()
+        ]
+    }
+
+    console.log(chapterIndex)
     const goToNextChapter = () => {
         if (allChapter[chapterIndex + 1] && allChapter) {
             router.replace(`/manga/${params.mangaId}/${allChapter[chapterIndex + 1].id}`)
@@ -109,9 +113,13 @@ const Chapter = () => {
     }, [])
 
     useEffect(() => {
-        if (chapterData)
-            getMangaChapter(language, chapterData)
-    }, [currentOffset])
+        const chapterIndex = allChapter
+            .findIndex(
+                (item: any) => item.id === params.chapterId
+            )
+        setChapterIndex(chapterIndex)
+    }, [allChapter])
+
     return (
         <div className='min-h-sceen w-full bg-teal-300'>
             <nav className={`bg-[#333] fixed h-auto top-0 w-full flex flex-row gap-4 ${navClassList.join(" ")}`}>
@@ -146,9 +154,9 @@ const Chapter = () => {
                                                 onSelect={(currentValue) => {
                                                     router.replace(`/manga/${params.mangaId}/${chapter.id}`)
                                                 }}
-                                                className='bg-black text-white'
+                                                className='bg-black text-white line-clamp-1'
                                             >
-                                                {`Chap ${chapter.chapter}`}
+                                                {`Chap ${chapter.chapter}${chapter.title ? `: ${chapter.title}` : ""}`}
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>

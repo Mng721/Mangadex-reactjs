@@ -36,9 +36,9 @@ const Home = () => {
             {mangaList.map((manga, index) =>
                 <div
                     onClick={() => router.push(`/manga/${manga.id}`)}
-                    className='flex flex-row justify-between items-center h-[150px] my-2 border rounded border-gray-400 hover:opacity-70'
+                    className='flex flex-row justify-between items-center h-[150px] my-2 border rounded border-gray-400 hover:opacity-70 overflow-hidden'
                     key={index}>
-                    <div className='text-white text-2xl font-bold'>{manga.attributes.title.en ?? manga.attributes.title.ja}</div>
+                    <div className='text-white text-2xl font-bold line-clamp-3'>{manga.attributes.title.en ?? manga.attributes.title.ja}</div>
                     <img
                         src={`https://uploads.mangadex.org/covers/${manga.id}/${manga.relationships.find((item) => item.type === "cover_art")?.attributes?.fileName}`}
                         alt='manga-img'
