@@ -20,6 +20,7 @@ const Chapter = () => {
     const [allChapter, setAllChapter] = useState<any[]>([])
     const [navClassList, setNavClassList] = useState([""]);
     const [chapterIndex, setChapterIndex] = useState(0)
+    const [openListChapter, setOpenListChapter] = useState(false)
     const scroll = useScrollListener();
 
     const LIMIT = 100
@@ -29,7 +30,7 @@ const Chapter = () => {
 
         if (scroll.y > 150 && scroll.y - scroll.lastY > 0)
             _classList.push("nav-bar--hidden");
-
+        setOpenListChapter(false)
         setNavClassList(_classList);
     }, [scroll.y, scroll.lastY]);
 
@@ -79,7 +80,6 @@ const Chapter = () => {
         ]
     }
 
-    console.log(chapterIndex)
     const goToNextChapter = () => {
         if (allChapter[chapterIndex + 1] && allChapter) {
             router.replace(`/manga/${params.mangaId}/${allChapter[chapterIndex + 1].id}`)
@@ -127,7 +127,7 @@ const Chapter = () => {
                     onClick={goToPreviousChapter}
                     className='float-left no-underline text-white p-4 cursor-pointer hover:bg-[#ddd] hover:text-black text-center basis-1/3'>Previous chapter</a>
                 <div className='basis-1/3 flex flex-col flex-1 mx-4 justify-center items-center'>
-                    <Popover >
+                    <Popover open={openListChapter} onOpenChange={setOpenListChapter}>
                         <PopoverTrigger asChild>
                             <Button
                                 variant="outline"
@@ -152,9 +152,10 @@ const Chapter = () => {
                                                 key={chapter.chapter}
                                                 value={chapter.chapter}
                                                 onSelect={(currentValue) => {
+                                                    setOpenListChapter(false)
                                                     router.replace(`/manga/${params.mangaId}/${chapter.id}`)
                                                 }}
-                                                className='bg-black text-white line-clamp-1'
+                                                className={`bg-black text-white line-clamp-1 ${chapterData?.id === chapter.id ? "bg-[#ddd] text-black" : ""}`}
                                             >
                                                 {`Chap ${chapter.chapter}${chapter.title ? `: ${chapter.title}` : ""}`}
                                             </CommandItem>
