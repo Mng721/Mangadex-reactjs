@@ -4,7 +4,6 @@ import { Input } from '~/components/ui/input'
 import { useDebounce } from 'use-debounce'
 import axios from "axios"
 import { Manga } from '~/types/manga'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { BASE_URL } from '~/util/constant'
 const Home = () => {
@@ -19,6 +18,9 @@ const Home = () => {
         axios.get(`${BASE_URL}/manga?limit=10&title=${searchQuery}&includedTagsMode=AND&excludedTagsMode=OR&availableTranslatedLanguage%5B%5D=en&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&order%5BlatestUploadedChapter%5D=desc&includes%5B%5D=cover_art`)
             .then((res) => {
                 setMangaList(res.data.data)
+            })
+            .catch((err) => {
+                console.log(err)
             })
     }
 

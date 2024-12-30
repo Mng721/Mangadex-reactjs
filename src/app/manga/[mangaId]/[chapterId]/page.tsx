@@ -34,8 +34,8 @@ const Chapter = () => {
         setNavClassList(_classList);
     }, [scroll.y, scroll.lastY]);
 
-    const getChapterData = async () => {
-        await axios({
+    const getChapterData = () => {
+        axios({
             method: 'GET',
             url: `${BASE_URL}/chapter/${params.chapterId}`
         }).then(res => {
@@ -44,8 +44,8 @@ const Chapter = () => {
         });
     }
 
-    const getMangaChapter = async (language: string, chapterData: ChapterType, offset: number) => {
-        await axios({
+    const getMangaChapter = (language: string, chapterData: ChapterType, offset: number) => {
+        axios({
             method: 'GET',
             url: `${BASE_URL}/manga/${params.mangaId}/feed?limit=${LIMIT}&translatedLanguage%5B%5D=${language}&contentRating%5B%5D=safe&contentRating%5B%5D=suggestive&contentRating%5B%5D=erotica&includeFutureUpdates=1&order%5Bchapter%5D=asc&offset=${offset}`,
         }).then(res => {

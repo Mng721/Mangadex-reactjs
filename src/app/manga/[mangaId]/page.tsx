@@ -56,27 +56,31 @@ const MangaPage = () => {
             .then((res) => {
                 setVolumeChaptersData(Object.values(res.data.volumes))
             })
+            .catch((err) => console.log(err))
     }
 
-    const fetchMangaData = async () => {
-        await axios.get(`${BASE_URL}/manga/${params.mangaId}?includes%5B%5D=manga&includes%5B%5D=cover_art&includes%5B%5D=author`)
+    const fetchMangaData = () => {
+        axios.get(`${BASE_URL}/manga/${params.mangaId}?includes%5B%5D=manga&includes%5B%5D=cover_art&includes%5B%5D=author`)
             .then((res) => setMangaData(res.data.data))
+            .catch((err) => console.log(err))
     }
 
-    const getLastestChapter = async () => {
-        await axios({
+    const getLastestChapter = () => {
+        axios({
             method: 'GET',
             url: `${BASE_URL}/manga/${params.mangaId}/feed?translatedLanguage[]=${value}&order[chapter]=desc&limit=1`
-        }).then(res => router.push(`./${mangaData?.id}/${res.data.data[0].id}`));
-
+        })
+            .then(res => router.push(`./${mangaData?.id}/${res.data.data[0].id}`))
+            .catch((err) => console.log(err))
     }
 
-    const getFirstChapter = async () => {
-        await axios({
+    const getFirstChapter = () => {
+        axios({
             method: 'GET',
             url: `${BASE_URL}/manga/${params.mangaId}/feed?translatedLanguage[]=${value}&order[chapter]=asc&limit=1`
-        }).then(res => router.push(`./${mangaData?.id}/${res.data.data[0].id}`));
-
+        })
+            .then(res => router.push(`./${mangaData?.id}/${res.data.data[0].id}`))
+            .catch((err) => console.log(err))
     }
 
     useEffect(() => {
