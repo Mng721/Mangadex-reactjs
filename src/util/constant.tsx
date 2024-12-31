@@ -1,1 +1,1 @@
-export const BASE_URL = 'https://api.mangadex.org';
+export const BASE_URL = 'https://cors-anywhere.herokuapp.com/https://api.mangadex.org';
