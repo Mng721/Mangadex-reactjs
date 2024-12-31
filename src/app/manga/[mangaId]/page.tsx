@@ -5,7 +5,7 @@ import { Check, ChevronDown, ChevronRight, ChevronsUpDown } from "lucide-react"
 import { useParams, useRouter } from 'next/navigation'
 import React, { use, useEffect, useLayoutEffect, useState } from 'react'
 import { Manga, Volume } from '~/types/manga'
-
+import { useSession } from "next-auth/react"
 import { Button } from "~/components/ui/button"
 import {
     Command,
@@ -44,6 +44,8 @@ const languages = [
 ]
 
 const MangaPage = () => {
+    const { data: session, status } = useSession()
+
     const params = useParams()
     const router = useRouter()
 
@@ -122,7 +124,9 @@ const MangaPage = () => {
                     alt="manga-cover"
                     className='object-cover h-full w-full absolute'
                 />
-                <div className='absolute right-4 top-4 z-20 '> {favourite ? <FaHeart color='red' size={"4rem"} onClick={handleRemoveFavourite} /> : <FaRegHeart size={"4rem"} onClick={handleAddFavourite} color='#ccc' />}</div>
+                {status === "authenticated" &&
+                    <div className='absolute right-4 top-4 z-20 '> {favourite ? <FaHeart color='red' size={"4rem"} onClick={handleRemoveFavourite} /> : <FaRegHeart size={"4rem"} onClick={handleAddFavourite} color='#ccc' />}</div>
+                }
                 <div className='absolute bg-gradient-to-b from-transparent to-black inset-0'></div>
                 <div className='w-full h-full bg-transparent relative z-10'>
                     <div className='absolute bottom-0 left-0'>
