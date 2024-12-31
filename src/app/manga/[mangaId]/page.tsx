@@ -3,7 +3,7 @@ import axios from 'axios'
 
 import { Check, ChevronDown, ChevronRight, ChevronsUpDown } from "lucide-react"
 import { useParams, useRouter } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { use, useEffect, useLayoutEffect, useState } from 'react'
 import { Manga, Volume } from '~/types/manga'
 
 import { Button } from "~/components/ui/button"
@@ -25,7 +25,9 @@ import {
 } from "~/components/ui/collapsible"
 import { cn } from '~/lib/utils'
 import { BASE_URL } from '~/util/constant'
-
+import { api } from "~/trpc/react";
+import { auth } from '~/server/auth'
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 const languages = [
     {
         value: "en",
@@ -50,6 +52,10 @@ const MangaPage = () => {
     const [languageOpen, setLanguageOpen] = useState(false)
     const [value, setValue] = useState<string>('en');
     const [volumeOpen, setVolumeOpen] = useState<{ [id: string]: boolean }>({})
+    const [favourite, setFavourite] = useState(false)
+    const addFavourite = api.manga.addFavourite.useMutation()
+    const removeFavourite = api.manga.removeFavoutite.useMutation()
+    const getUserFavourite = api.manga.getUserFavourite.useQuery().data
 
     const fetchVolumeChaptersData = (languageSelected: string) => {
         axios.get(`${BASE_URL}/manga/${params.mangaId}/aggregate?translatedLanguage%5B%5D=${languageSelected}`)
@@ -58,6 +64,22 @@ const MangaPage = () => {
             })
             .catch((err) => console.log(err))
     }
+
+    const handleAddFavourite = () => {
+        addFavourite.mutate(params.mangaId)
+        setFavourite(true)
+    }
+
+    const handleRemoveFavourite = () => {
+        removeFavourite.mutate(params.mangaId)
+        setFavourite(false)
+    }
+
+    useLayoutEffect(() => {
+        if (getUserFavourite) {
+            setFavourite(getUserFavourite.find(fav => fav.mangaId === params.mangaId) ? true : false)
+        }
+    }, [getUserFavourite])
 
     const fetchMangaData = () => {
         axios.get(`${BASE_URL}/manga/${params.mangaId}?includes%5B%5D=manga&includes%5B%5D=cover_art&includes%5B%5D=author`)
@@ -100,7 +122,7 @@ const MangaPage = () => {
                     alt="manga-cover"
                     className='object-cover h-full w-full absolute'
                 />
-
+                <div className='absolute right-4 top-4 z-20 '> {favourite ? <FaHeart color='red' size={"4rem"} onClick={handleRemoveFavourite} /> : <FaRegHeart size={"4rem"} onClick={handleAddFavourite} color='#ccc' />}</div>
                 <div className='absolute bg-gradient-to-b from-transparent to-black inset-0'></div>
                 <div className='w-full h-full bg-transparent relative z-10'>
                     <div className='absolute bottom-0 left-0'>

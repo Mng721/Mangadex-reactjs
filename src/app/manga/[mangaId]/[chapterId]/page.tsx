@@ -81,7 +81,7 @@ const Chapter = () => {
     }
 
     const goToNextChapter = () => {
-        if (allChapter[chapterIndex + 1] && allChapter) {
+        if (allChapter && allChapter[chapterIndex + 1]) {
             router.replace(`/manga/${params.mangaId}/${allChapter[chapterIndex + 1].id}`)
             return
         }
@@ -89,7 +89,7 @@ const Chapter = () => {
     }
 
     const goToPreviousChapter = () => {
-        if (allChapter[chapterIndex - 1] && allChapter) {
+        if (allChapter && allChapter[chapterIndex - 1]) {
             router.replace(`/manga/${params.mangaId}/${allChapter[chapterIndex - 1].id}`)
             return
         }
@@ -100,7 +100,8 @@ const Chapter = () => {
             .then((res) =>
                 res.data.chapter.data.map((item: string) => `${res.data.baseUrl}/data/${res.data.chapter.hash}/${item}`)
             )
-            .catch(() => {
+            .catch((error) => {
+                console.log(error)
                 setError(true)
             })
 
@@ -110,7 +111,7 @@ const Chapter = () => {
     useEffect(() => {
         fetchChapterImgUrl()
         getChapterData()
-    }, [])
+    }, [params.chapterId])
 
     useEffect(() => {
         const chapterIndex = allChapter
