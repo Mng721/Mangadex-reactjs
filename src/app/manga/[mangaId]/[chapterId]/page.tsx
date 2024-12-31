@@ -26,7 +26,7 @@ const Chapter = () => {
     const LIMIT = 100
     // update classList of nav on scroll
     useEffect(() => {
-        const _classList = [];
+        const _classList = [""];
 
         if (scroll.y > 150 && scroll.y - scroll.lastY > 0)
             _classList.push("nav-bar--hidden");
