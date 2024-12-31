@@ -46,7 +46,7 @@ const languages = [
 const MangaPage = () => {
     const { data: session, status } = useSession()
 
-    const params = useParams()
+    const params = useParams<{ mangaId: string }>()
     const router = useRouter()
 
     const [mangaData, setMangaData] = useState<Manga>()
